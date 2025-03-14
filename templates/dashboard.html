@@ -1,0 +1,1121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <i class="fas fa-industry me-2"></i>
+                    <h5 class="mb-0">Equipamentos</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="input-group p-2">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-0 shadow-none" id="equipment-search" 
+                               placeholder="Buscar equipamento...">
+                    </div>
+                    <div id="equipment-list" class="list-group list-group-flush">
+                        <!-- Preenchido via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="row">
+                <!-- Status Cards -->
+                <div class="col-12 mb-4">
+                    <div class="row" id="status-cards">
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <h6 class="text-muted mb-1">Produção</h6>
+                                    <div class="d-flex align-items-center">
+                                        <h3 class="mb-0" id="production-value">-</h3>
+                                        <small class="text-success ms-2">CPM</small>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <small class="text-muted">Média: <span id="avg-production">-</span></small>
+                                        <small class="text-success">
+                                            <i class="fas fa-arrow-up"></i> <span id="production-trend">-</span>%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <h6 class="text-muted mb-1">Temperatura</h6>
+                                    <div class="d-flex align-items-center">
+                                        <h3 class="mb-0" id="temp-value">-</h3>
+                                        <small class="text-success ms-2">°C</small>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <small class="text-muted">Média: <span id="avg-temp">-</span></small>
+                                        <small class="text-success">
+                                            <i class="fas fa-arrow-up"></i> <span id="temp-trend">-</span>%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <h6 class="text-muted mb-1">Rejeitos</h6>
+                                    <div class="d-flex align-items-center">
+                                        <h3 class="mb-0" id="reject-value">-</h3>
+                                        <small class="text-danger ms-2">un</small>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <small class="text-muted">Total: <span id="total-rejects">-</span></small>
+                                        <small class="text-danger">
+                                            <i class="fas fa-arrow-down"></i> <span id="reject-trend">-</span>%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <h6 class="text-muted mb-1">PLC Status</h6>
+                                    <div class="d-flex align-items-center">
+                                        <h3 class="mb-0" id="plc-status">-</h3>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <small class="text-muted">Última atualização:</small>
+                                        <small id="plc-last-update">-</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos -->
+                <div class="col-md-8 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white border-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Análise de Tendências</h5>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-primary btn-sm" data-period="hour">1h</button>
+                                    <button class="btn btn-outline-primary btn-sm" data-period="day">Dia</button>
+                                    <button class="btn btn-outline-primary btn-sm active" data-period="week">Semana</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="speedChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PLC Raw Data -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0">Dados PLC</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush" id="plc-raw-data">
+                                <!-- Preenchido via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Leituras -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white border-0">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <h5 class="mb-0">Últimas Leituras</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-filter"></i>
+                                        </span>
+                                        <select class="form-select" id="metric-filter">
+                                            <option value="">Todas as métricas</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-calendar"></i>
+                                        </span>
+                                        <input type="date" class="form-control" id="date-filter">
+                                    </div>
+                                    <button class="btn btn-primary btn-sm" id="export-csv">
+                                        <i class="fas fa-download me-1"></i>Exportar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="readings-table">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="sortable" data-sort="equipment">Equipamento <i class="fas fa-sort"></i></th>
+                                            <th class="sortable" data-sort="status">Status <i class="fas fa-sort"></i></th>
+                                            <th class="sortable" data-sort="metric">Métrica <i class="fas fa-sort"></i></th>
+                                            <th class="sortable" data-sort="value">Valor <i class="fas fa-sort"></i></th>
+                                            <th>Unidade</th>
+                                            <th class="sortable" data-sort="timestamp">Última Atualização <i class="fas fa-sort"></i></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="realtime-table-body">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- Paginação -->
+                            <div class="d-flex justify-content-between align-items-center p-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <select class="form-select form-select-sm" id="page-size">
+                                        <option value="10">10 por página</option>
+                                        <option value="25">25 por página</option>
+                                        <option value="50">50 por página</option>
+                                    </select>
+                                    <span class="text-muted" id="total-records"></span>
+                                </div>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0" id="pagination">
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment"></script>
+
+<style>
+.dashboard-container {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 56px);
+}
+
+.card {
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 1rem;
+    transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.list-group-item.active {
+    background-color: #e9ecef;
+    color: inherit;
+    border-color: #dee2e6;
+}
+
+.sub-equipment-list {
+    border-left: 3px solid #dee2e6;
+    margin-left: 1rem;
+    padding-left: 1rem;
+}
+
+.sortable {
+    cursor: pointer;
+}
+
+.sortable:hover {
+    background-color: #f8f9fa;
+}
+
+.card-header {
+    border-bottom: none;
+    background-color: white;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+.pagination {
+    margin-bottom: 0;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* Status badges */
+.badge {
+    padding: 0.5em 0.8em;
+    border-radius: 30px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style>
+
+<script>
+let selectedEquipment = null;
+let chart = null;
+
+// Função para carregar lista de equipamentos
+async function loadEquipments() {
+    try {
+        const response = await fetch('/api/equipamentos');
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/login';  // Redireciona para login se não autenticado
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if ('error' in data) {
+            throw new Error(data.error);
+        }
+        
+        const listDiv = document.getElementById('equipment-list');
+        listDiv.innerHTML = '';
+        
+        if (Object.keys(data).length === 0) {
+            listDiv.innerHTML = '<div class="alert alert-info">Nenhum equipamento encontrado</div>';
+            return;
+        }
+        
+        for (const [id, eq] of Object.entries(data)) {
+            const button = document.createElement('button');
+            button.className = `list-group-item list-group-item-action ${getStatusClass(eq.status)}`;
+            
+            // Verifica se é um tipo de equipamento que tem sub-equipamentos
+            const hasSubEquipments = ['BM', 'ISP', 'CVP', 'LNR', 'BAL', 'BAG'].includes(eq.tipo);
+            
+            button.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${eq.display_name}</h6>
+                        <small>${eq.linha_display}</small>
+                    </div>
+                    ${hasSubEquipments ? '<span class="badge bg-secondary">+</span>' : ''}
+                </div>
+                <div class="sub-equipment-list mt-2" style="display: none;">
+                </div>
+            `;
+
+            if (hasSubEquipments) {
+                button.onclick = () => toggleSubEquipments(id, eq, button);
+            } else {
+                button.onclick = () => selectEquipment(id, eq);
+            }
+            
+            listDiv.appendChild(button);
+        }
+        
+        // Carregar últimas leituras
+        await loadLatestReadings();
+    } catch (error) {
+        console.error('Erro ao carregar equipamentos:', error);
+        const listDiv = document.getElementById('equipment-list');
+        listDiv.innerHTML = `
+            <div class="alert alert-danger">
+                Erro ao carregar equipamentos. 
+                <button class="btn btn-link" onclick="loadEquipments()">Tentar novamente</button>
+            </div>`;
+    }
+}
+
+// Remover a segunda definição de selectEquipment e atualizar para usar apenas esta versão
+async function selectEquipment(id, equipment) {
+    selectedEquipment = {id, ...equipment};
+    
+    try {
+        // Busca dados do equipamento
+        const metricsResponse = await fetch(`/api/readings/metrics/${id}`);
+        const metrics = await metricsResponse.json();
+
+        // Atualiza apenas os valores dos cards existentes
+        updateCardValues(metrics);
+
+        // Busca previsões do equipamento
+        const predictionsResponse = await fetch(`/api/predictions/${id}`);
+        const predictionsData = await predictionsResponse.json();
+        
+        // Adiciona dados fictícios de produção às previsões
+        const predictionsWithProduction = predictionsData.predictions.map(p => ({
+            ...p,
+            producao: Math.floor(Math.random() * (850 - 650) + 650) // Produção entre 650-850 CPM
+        }));
+        
+        // Atualiza título e gráfico
+        const chartSection = document.querySelector('.card-header h5');
+        if (chartSection) {
+            chartSection.textContent = `${equipment.nome} - Análise de Performance`;
+        }
+        
+        // Cria o gráfico dividido com os dados enriquecidos
+        createSplitChart(predictionsWithProduction);
+
+        // Atualiza outros componentes
+        loadLatestReadings(id);
+        updatePLCData(id);
+    } catch (error) {
+        console.error('Erro ao carregar métricas:', error);
+    }
+}
+
+// Nova função para criar gráfico dividido
+function createSplitChart(predictions) {
+    const ctx = document.getElementById('speedChart').getContext('2d');
+    
+    if (chart) {
+        chart.destroy();
+    }
+
+    chart = new Chart(ctx, {
+        type: 'mixed', // Permite diferentes tipos de gráficos
+        data: {
+            labels: predictions.map(p => new Date(p.data).toLocaleTimeString()),
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Produção',
+                    data: predictions.map(p => p.producao), // Usa os dados de produção adicionados
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgb(75, 192, 192)',
+                    borderWidth: 1,
+                    yAxisID: 'y1',
+                    order: 2,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.7
+                },
+                {
+                    type: 'line',
+                    label: 'Prob. Falha',
+                    data: predictions.map(p => p.probabilidade_falha * 100),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    yAxisID: 'y2',
+                    order: 1,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            scales: {
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Produção (CPM)',
+                        color: 'rgb(75, 192, 192)'
+                    },
+                    min: 0,
+                    max: 1000,
+                    ticks: {
+                        color: 'rgb(75, 192, 192)',
+                        stepSize: 100,
+                        callback: function(value) {
+                            return value.toFixed(0);
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: true,
+                        color: 'rgba(75, 192, 192, 0.1)'
+                    }
+                },
+                y2: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Probabilidade de Falha (%)',
+                        color: 'rgb(255, 99, 132)'
+                    },
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        color: 'rgb(255, 99, 132)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'center',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        boxWidth: 10
+                    }
+                },
+                title: {
+                    display: true,
+                    text: selectedEquipment ? `${selectedEquipment.nome} - Análise de Performance` : 'Visão Geral',
+                    padding: {
+                        top: 10,
+                        bottom: 30
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.datasetIndex === 1) { // Probabilidade de falha
+                                const severidade = predictions[context.dataIndex].severidade;
+                                label += `${context.parsed.y.toFixed(1)}% (${severidade})`;
+                            } else { // Produção
+                                label += `${context.parsed.y.toFixed(0)} CPM`;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Nova função para atualizar apenas os valores dos cards
+function updateCardValues(metrics) {
+    // Produção
+    document.getElementById('production-value').textContent = metrics.producao?.current || '-';
+    document.getElementById('avg-production').textContent = metrics.producao?.average || '-';
+    updateTrendIndicator('production-trend', metrics.producao?.trend);
+
+    // Temperatura
+    document.getElementById('temp-value').textContent = metrics.temperatura?.current || '-';
+    document.getElementById('avg-temp').textContent = metrics.temperatura?.average || '-';
+    updateTrendIndicator('temp-trend', metrics.temperatura?.trend);
+
+    // Rejeitos
+    document.getElementById('reject-value').textContent = metrics.rejeitos?.current || '-';
+    document.getElementById('total-rejects').textContent = metrics.rejeitos?.total || '-';
+    updateTrendIndicator('reject-trend', metrics.rejeitos?.trend, true);
+
+    // PLC Status
+    document.getElementById('plc-status').textContent = metrics.plc_status || 'Online';
+    document.getElementById('plc-last-update').textContent = new Date().toLocaleTimeString();
+}
+
+// Função auxiliar para atualizar indicadores de tendência
+function updateTrendIndicator(elementId, trend, isReverse = false) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    const parentSmall = element.parentElement;
+    const icon = parentSmall.querySelector('i');
+    
+    const value = Math.abs(trend || 0);
+    const isPositive = trend >= 0;
+    
+    // Para rejeitos, a lógica é invertida (diminuir é bom)
+    const isGood = isReverse ? !isPositive : isPositive;
+    
+    parentSmall.className = isGood ? 'text-success' : 'text-danger';
+    icon.className = `fas fa-arrow-${isPositive ? 'up' : 'down'}`;
+    element.textContent = value.toFixed(2);
+}
+
+// Modifique a função loadGeneralMetrics para usar a mesma função de atualização
+async function loadGeneralMetrics() {
+    try {
+        const response = await fetch('/api/readings/general');
+        const metrics = await response.json();
+        
+        // Usa a mesma função para atualizar os valores
+        updateCardValues({
+            producao: metrics.total_producao,
+            temperatura: metrics.avg_temperatura,
+            rejeitos: metrics.total_rejeitos,
+            plc_status: metrics.system_status
+        });
+        
+        // Atualiza gráfico geral
+        updateGeneralChart(metrics.production_history);
+    } catch (error) {
+        console.error('Erro ao carregar métricas gerais:', error);
+    }
+}
+
+function updateGeneralChart(data) {
+    const ctx = document.getElementById('speedChart').getContext('2d');
+    
+    if (chart) {
+        chart.destroy();
+    }
+    
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => new Date(d.timestamp).toLocaleTimeString()),
+            datasets: [{
+                label: 'Produção Total',
+                data: data.map(d => d.total_producao),
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.4,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Produção Total do Sistema'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'CPM Total'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Função para selecionar equipamento
+function selectEquipment(id, equipment) {
+    selectedEquipment = {id, ...equipment};
+    loadPredictions(id);
+    loadLatestReadings(id);  // Atualizado para passar o ID do equipamento
+}
+
+// Função para carregar previsões
+async function loadPredictions(equipmentId) {
+    try {
+        const response = await fetch(`/api/predictions/${equipmentId}`);
+        const data = await response.json();
+        
+        // Atualiza o título da seção do gráfico
+        const chartSection = document.querySelector('.card-header h5');
+        if (chartSection) {
+            chartSection.textContent = `Análise de Tendências - ${data.equipment_name}`;
+        }
+        
+        updateChart(data.predictions);
+    } catch (error) {
+        console.error('Erro ao carregar previsões:', error);
+    }
+}
+
+// Função para atualizar gráfico
+function updateChart(predictions) {
+    const ctx = document.getElementById('speedChart').getContext('2d');
+    
+    if (chart) {
+        chart.destroy();
+    }
+    
+    const productionData = {
+        labels: predictions.map(p => new Date(p.data).toLocaleTimeString()),
+        datasets: [{
+            label: 'Produção (CPM)',
+            data: predictions.map(p => p.producao),
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.4,
+            yAxisID: 'y1'
+        }]
+    };
+
+    const failureData = {
+        labels: predictions.map(p => new Date(p.data).toLocaleTimeString()),
+        datasets: [{
+            label: 'Probabilidade de Falha (%)',
+            data: predictions.map(p => p.probabilidade_falha * 100),
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.4,
+            yAxisID: 'y2',
+            borderDash: [5, 5]
+        }]
+    };
+    
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: predictions.map(p => new Date(p.data).toLocaleTimeString()),
+            datasets: [
+                {
+                    ...productionData.datasets[0],
+                    order: 1
+                },
+                {
+                    ...failureData.datasets[0],
+                    order: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            layout: {
+                padding: {
+                    top: 20
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Produção (CPM)'
+                    },
+                    grid: {
+                        borderDash: [2, 4],
+                        color: 'rgba(75, 192, 192, 0.2)'
+                    }
+                },
+                y2: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Probabilidade de Falha (%)'
+                    },
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'start',
+                    labels: {
+                        boxWidth: 15,
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                title: {
+                    display: true,
+                    text: selectedEquipment ? `${selectedEquipment.nome} - Análise de Produção e Tendência de Falha` : 'Produção Total do Sistema',
+                    padding: {
+                        bottom: 30
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.dataset.yAxisID === 'y2') {
+                                const severidade = predictions[context.dataIndex].severidade;
+                                label += `${context.parsed.y.toFixed(1)}% (${severidade})`;
+                            } else {
+                                label += context.parsed.y.toFixed(1);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Adicione esta nova função específica para o gráfico do equipamento
+function updateEquipmentChart(predictions) {
+    const ctx = document.getElementById('speedChart').getContext('2d');
+    
+    if (chart) {
+        chart.destroy();
+    }
+    
+    // Divide o canvas em duas áreas
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: predictions.map(p => new Date(p.data).toLocaleTimeString()),
+            datasets: [
+                {
+                    label: 'Produção (CPM)',
+                    data: predictions.map(p => p.producao),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.4,
+                    yAxisID: 'y-production'
+                },
+                {
+                    label: 'Probabilidade de Falha (%)',
+                    data: predictions.map(p => p.probabilidade_falha * 100),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    yAxisID: 'y-failure'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            stacked: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: `${selectedEquipment.nome} - Produção e Tendência de Falha`
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: false,
+                    position: 'left',
+                },
+                'y-production': {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Produção (CPM)'
+                    },
+                    grid: {
+                        drawOnChartArea: true
+                    }
+                },
+                'y-failure': {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Probabilidade de Falha (%)'
+                    },
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            },
+            animations: {
+                tension: {
+                    duration: 1000,
+                    easing: 'linear'
+                }
+            },
+            transitions: {
+                show: {
+                    animations: {
+                        x: {
+                            from: 0
+                        },
+                        y: {
+                            from: 0
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Função auxiliar para classes de status
+function getStatusClass(status) {
+    switch(status.toLowerCase()) {
+        case 'crítico': return 'bg-danger text-white';
+        case 'alerta': return 'bg-warning';
+        case 'operacional': return 'bg-success text-white';
+        default: return '';
+    }
+}
+
+// Adicionar função para carregar últimas leituras
+async function loadLatestReadings(equipmentId) {
+    if (!equipmentId) return;  // Se não houver equipamento selecionado, não faz nada
+    
+    try {
+        const response = await fetch(`/api/readings/latest/${equipmentId}`);
+        const readings = await response.json();
+        const tableBody = document.getElementById('realtime-table-body');
+        tableBody.innerHTML = '';
+        
+        readings.forEach(reading => {
+            const row = document.createElement('tr');
+            const metricDisplay = reading.metric.charAt(0).toUpperCase() + reading.metric.slice(1);
+            
+            row.innerHTML = `
+                <td>${reading.equipment_name}</td>
+                <td><span class="badge ${getStatusClass(reading.status)}">${reading.status}</span></td>
+                <td>${metricDisplay}</td>
+                <td>${reading.value}</td>
+                <td>${reading.unit}</td>
+                <td>${new Date(reading.timestamp).toLocaleString()}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar leituras:', error);
+    }
+}
+
+// Função para alternar sub-equipamentos
+async function toggleSubEquipments(parentId, parentEq, button) {
+    const subList = button.querySelector('.sub-equipment-list');
+    const badge = button.querySelector('.badge');
+    
+    if (subList.style.display === 'none') {
+        try {
+            const response = await fetch(`/api/equipamentos/${parentId}/sub`);
+            const subEquipments = await response.json();
+            
+            subList.innerHTML = '';
+            for (const subEq of subEquipments) {
+                const subButton = document.createElement('button');
+                subButton.className = `list-group-item list-group-item-action ${getStatusClass(subEq.status)} ms-3 mt-1`;
+                
+                // Determina o prefixo baseado no tipo e linha do equipamento pai
+                let prefix = '';
+                if (parentEq.tipo === 'BM') {
+                    prefix = parentEq.linha === '22' ? 'V' : 'W';
+                } else if (parentEq.tipo === 'ISP') {
+                    prefix = 'IS';
+                } else if (parentEq.tipo === 'CVP') {
+                    prefix = 'CP';
+                } else if (parentEq.tipo === 'LNR') {
+                    prefix = 'LN';
+                } else if (parentEq.tipo === 'BAL') {
+                    prefix = 'BAL';
+                } else if (parentEq.tipo === 'BAG') {
+                    prefix = 'BAG';
+                }
+
+                // Extrai o número do sub-equipamento
+                const numMatch = subEq.nome.match(/\d+$/);
+                const num = numMatch ? numMatch[0] : '';
+                
+                // Monta o nome de exibição
+                const displayName = prefix + num;
+
+                subButton.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${displayName}</h6>
+                            <small>Linha ${subEq.linha}</small>
+                        </div>
+                    </div>
+                `;
+                
+                subButton.onclick = (e) => {
+                    e.stopPropagation();
+                    selectEquipment(subEq.id, {...subEq, nome: displayName});
+                };
+                subList.appendChild(subButton);
+            }
+            
+            subList.style.display = 'block';
+            badge.textContent = '-';
+        } catch (error) {
+            console.error('Erro ao carregar sub-equipamentos:', error);
+        }
+    } else {
+        subList.style.display = 'none';
+        badge.textContent = '+';
+    }
+}
+
+// Carregar dados iniciais
+loadEquipments();
+
+// Atualizar dados a cada 30 segundos
+setInterval(() => {
+    loadEquipments();
+    if (selectedEquipment) {
+        loadLatestReadings(selectedEquipment.id);
+    }
+}, 30000);
+
+// Adicione estas novas funções
+function initializeTable() {
+    const table = document.getElementById('readings-table');
+    const headers = table.querySelectorAll('th.sortable');
+    
+    headers.forEach(header => {
+        header.addEventListener('click', () => {
+            const column = header.dataset.sort;
+            sortTable(column);
+        });
+    });
+}
+
+function initializeFilters() {
+    const metricFilter = document.getElementById('metric-filter');
+    const dateFilter = document.getElementById('date-filter');
+    const pageSizeSelect = document.getElementById('page-size');
+    
+    metricFilter.addEventListener('change', filterReadings);
+    dateFilter.addEventListener('change', filterReadings);
+    pageSizeSelect.addEventListener('change', updatePageSize);
+}
+
+// Implementar as funções de filtro, ordenação e paginação
+function filterReadings() {
+    // Implementação do filtro
+}
+
+function sortTable(column) {
+    // Implementação da ordenação
+}
+
+function updatePageSize() {
+    // Implementação da paginação
+}
+
+function exportToCsv() {
+    // Implementação da exportação
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', () => {
+    initializeTable();
+    initializeFilters();
+    loadEquipments();
+    loadGeneralMetrics(); // Carrega métricas gerais inicialmente
+});
+
+// Atualize o intervalo para também atualizar métricas gerais
+setInterval(() => {
+    loadEquipments();
+    if (selectedEquipment) {
+        loadLatestReadings(selectedEquipment.id);
+        updatePLCData(selectedEquipment.id);
+    } else {
+        loadGeneralMetrics();
+    }
+}, 30000);
+
+// Função para atualizar dados do PLC em tempo real
+async function updatePLCData(equipmentId) {
+    try {
+        const response = await fetch(`/api/plc/read?tag=${equipmentId}`);
+        const data = await response.json();
+        
+        // Função auxiliar para atualizar elemento com segurança
+        const safeUpdateElement = (id, value, transform = (v) => v) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = transform(value);
+            }
+        };
+        
+        // Atualiza elementos com verificação de null
+        safeUpdateElement('production-value', data.producao || '-');
+        safeUpdateElement('temp-value', data.temperatura || '-');
+        safeUpdateElement('reject-value', data.rejeitos || '-');
+        safeUpdateElement('plc-status', data.status || 'Online');
+        safeUpdateElement('plc-last-update', new Date().toLocaleTimeString());
+        safeUpdateElement('avg-production', data.avg_producao, v => v ? v.toFixed(0) : '-');
+        safeUpdateElement('avg-temp', data.avg_temperatura, v => v ? v.toFixed(1) : '-');
+        safeUpdateElement('total-rejeitos', data.total_rejeitos || '-');
+        
+        // Atualiza dados brutos do PLC
+        const rawDataDiv = document.getElementById('plc-raw-data');
+        if (rawDataDiv) {
+            rawDataDiv.innerHTML = Object.entries(data)
+                .map(([key, value]) => `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>${key}:</strong>
+                            <span>${value}</span>
+                        </div>
+                    </div>
+                `).join('');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao atualizar dados do PLC:', error);
+    }
+}
+
+// Atualizar dados a cada 5 segundos
+setInterval(() => {
+    if (selectedEquipment) {
+        updatePLCData(selectedEquipment.id);
+    }
+}, 50000);
+</script>
+{% endblock %}

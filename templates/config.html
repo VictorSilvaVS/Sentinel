@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="config-container p-4">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <h2>Configurações do Sistema</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Configurações PLC -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Configurações do PLC</h5>
+                </div>
+                <div class="card-body">
+                    <form id="plcForm">
+                        <div class="mb-3">
+                            <label class="form-label">Endereço IP</label>
+                            <input type="text" class="form-control" id="plc_ip" name="ip">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Rack</label>
+                                    <input type="number" class="form-control" id="plc_rack" name="rack">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Slot</label>
+                                    <input type="number" class="form-control" id="plc_slot" name="slot">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Timeout (s)</label>
+                                    <input type="number" class="form-control" id="plc_timeout" name="timeout">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configurações de Alarmes -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Configurações de Alarmes</h5>
+                </div>
+                <div class="card-body">
+                    <form id="alarmesForm">
+                        <div class="mb-3">
+                            <label class="form-label">Temperatura Máxima (°C)</label>
+                            <input type="number" class="form-control" id="temp_max" name="temperatura_maxima">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Velocidade Mínima (CPM)</label>
+                            <input type="number" class="form-control" id="vel_min" name="velocidade_minima">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Pressão Máxima (bar)</label>
+                            <input type="number" class="form-control" id="press_max" name="pressao_maxima">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tags dos Equipamentos -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Tags dos Equipamentos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Linha de Latas</h6>
+                            <form id="tagsLatasForm">
+                                <!-- Preenchido via JavaScript -->
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Linha de Tampas</h6>
+                            <form id="tagsTampasForm">
+                                <!-- Preenchido via JavaScript -->
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12 text-end">
+            <button class="btn btn-primary" onclick="saveConfig()">Salvar Configurações</button>
+        </div>
+    </div>
+
+    <!-- Adicionar nova seção após Tags dos Equipamentos -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Importação de Dados</h5>
+                </div>
+                <div class="card-body">
+                    <form id="importForm" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo de Arquivo</label>
+                                    <select class="form-select" id="fileType">
+                                        <option value="csv">CSV - Dados Tabulares</option>
+                                        <option value="json">JSON - JavaScript Object Notation</option>
+                                        <option value="xml">XML - eXtensible Markup Language</option>
+                                        <option value="txt">TXT - Texto Plano</option>
+                                        <option value="yaml">YAML - YAML Ain't Markup Language</option>
+                                        <option value="parquet">Parquet - Formato Colunar Apache</option>
+                                        <option value="avro">Avro - Formato Apache</option>
+                                        <option value="orc">ORC - Optimized Row Columnar</option>
+                                        <option value="sql">SQL - Arquivo de Dump</option>
+                                        <option value="hdf5">HDF5 - Hierarchical Data Format</option>
+                                        <option value="feather">Feather - Formato Arrow</option>
+                                        <option value="pickle">Pickle - Serialização Python</option>
+                                        <option value="protobuf">Protobuf - Protocol Buffers</option>
+                                        <option value="xlsx">Excel - XLSX</option>
+                                        <option value="arff">ARFF - Weka</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Arquivo</label>
+                                    <input type="file" class="form-control" id="dataFile">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Configurações</label>
+                                    <div id="importConfig">
+                                        <!-- Configurações específicas por tipo -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="button" class="btn btn-primary" onclick="importData()">
+                                    Importar Dados
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let config = {};
+
+async function loadConfig() {
+    try {
+        const response = await fetch('/api/config/settings');
+        config = await response.json();
+        
+        // Preencher formulário PLC
+        document.getElementById('plc_ip').value = config.plc.ip;
+        document.getElementById('plc_rack').value = config.plc.rack;
+        document.getElementById('plc_slot').value = config.plc.slot;
+        document.getElementById('plc_timeout').value = config.plc.timeout;
+        
+        // Preencher formulário Alarmes
+        document.getElementById('temp_max').value = config.alarmes.temperatura_maxima;
+        document.getElementById('vel_min').value = config.alarmes.velocidade_minima;
+        document.getElementById('press_max').value = config.alarmes.pressao_maxima;
+        
+        // Preencher tags das linhas
+        const tagsLatas = document.getElementById('tagsLatasForm');
+        const tagsTampas = document.getElementById('tagsTampasForm');
+        
+        for (const [tag, desc] of Object.entries(config.equipamentos.linhas_latas)) {
+            tagsLatas.innerHTML += createTagInput(tag, desc, 'linhas_latas');
+        }
+        
+        for (const [tag, desc] of Object.entries(config.equipamentos.linha_tampas)) {
+            tagsTampas.innerHTML += createTagInput(tag, desc, 'linha_tampas');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+    }
+}
+
+function createTagInput(tag, desc, prefix) {
+    return `
+        <div class="mb-3">
+            <label class="form-label">${desc}</label>
+            <input type="text" class="form-control" 
+                   data-tag="${tag}" 
+                   data-prefix="${prefix}"
+                   value="${tag}">
+        </div>
+    `;
+}
+
+async function saveConfig() {
+    // Atualizar objeto de configuração
+    config.plc = {
+        ip: document.getElementById('plc_ip').value,
+        rack: parseInt(document.getElementById('plc_rack').value),
+        slot: parseInt(document.getElementById('plc_slot').value),
+        timeout: parseInt(document.getElementById('plc_timeout').value),
+        scan_interval: config.plc.scan_interval
+    };
+    
+    config.alarmes = {
+        temperatura_maxima: parseFloat(document.getElementById('temp_max').value),
+        velocidade_minima: parseInt(document.getElementById('vel_min').value),
+        pressao_maxima: parseFloat(document.getElementById('press_max').value)
+    };
+    
+    // Atualizar tags
+    const tagsLatas = {};
+    const tagsTampas = {};
+    
+    document.querySelectorAll('#tagsLatasForm input').forEach(input => {
+        tagsLatas[input.value] = input.previousElementSibling.textContent;
+    });
+    
+    document.querySelectorAll('#tagsTampasForm input').forEach(input => {
+        tagsTampas[input.value] = input.previousElementSibling.textContent;
+    });
+    
+    config.equipamentos = {
+        linhas_latas: tagsLatas,
+        linha_tampas: tagsTampas
+    };
+    
+    try {
+        const response = await fetch('/api/config/settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(config)
+        });
+        
+        if (response.ok) {
+            alert('Configurações salvas com sucesso!');
+        } else {
+            throw new Error('Erro ao salvar configurações');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao salvar configurações');
+    }
+}
+
+// Carregar configurações ao iniciar
+loadConfig();
+
+// Adicionar novas funções para importação
+function updateImportConfig() {
+    const fileType = document.getElementById('fileType').value;
+    const configDiv = document.getElementById('importConfig');
+    
+    const configs = {
+        csv: `
+            <div class="mb-2">
+                <label class="form-label">Separador</label>
+                <input type="text" class="form-control" id="csvSeparator" value=",">
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Encoding</label>
+                <input type="text" class="form-control" id="csvEncoding" value="utf-8">
+            </div>
+        `,
+        json: `
+            <div class="mb-2">
+                <label class="form-label">Caminho do Objeto</label>
+                <input type="text" class="form-control" id="jsonPath" placeholder="Ex: data.records">
+            </div>
+        `,
+        excel: `
+            <div class="mb-2">
+                <label class="form-label">Planilha</label>
+                <input type="text" class="form-control" id="excelSheet" placeholder="Sheet1">
+            </div>
+        `,
+        // Configurações para outros formatos...
+    };
+    
+    configDiv.innerHTML = configs[fileType] || '';
+}
+
+async function importData() {
+    const fileType = document.getElementById('fileType').value;
+    const file = document.getElementById('dataFile').files[0];
+    
+    if (!file) {
+        alert('Selecione um arquivo para importar');
+        return;
+    }
+    
+    // Mostrar feedback visual
+    const importButton = document.querySelector('button[onclick="importData()"]');
+    const originalText = importButton.innerHTML;
+    importButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Importando...`;
+    importButton.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', fileType);
+    
+    // Adicionar configurações específicas
+    switch(fileType) {
+        case 'csv':
+            const separator = document.getElementById('csvSeparator')?.value || ',';
+            const encoding = document.getElementById('csvEncoding')?.value || 'utf-8';
+            formData.append('separator', separator);
+            formData.append('encoding', encoding);
+            break;
+        case 'json':
+            const jsonPath = document.getElementById('jsonPath')?.value;
+            if (jsonPath) formData.append('jsonPath', jsonPath);
+            break;
+        case 'excel':
+            const sheet = document.getElementById('excelSheet')?.value;
+            if (sheet) formData.append('sheet', sheet);
+            break;
+    }
+    
+    try {
+        const response = await fetch('/api/config/import', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Dados importados com sucesso!\n' + (data.message || ''));
+        } else {
+            throw new Error(data.error || 'Erro desconhecido ao importar dados');
+        }
+    } catch (error) {
+        console.error('Erro detalhado:', error);
+        alert(`Erro ao importar dados: ${error.message}`);
+    } finally {
+        importButton.innerHTML = originalText;
+        importButton.disabled = false;
+    }
+}
+
+// Adicionar listener para mudança de tipo de arquivo
+document.getElementById('fileType').addEventListener('change', updateImportConfig);
+
+// Inicializar configurações de importação
+updateImportConfig();
+
+</script>
+
+<style>
+.config-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+.spinner-border {
+    margin-right: 0.5rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <h2>Login Sentinel</h2>
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label>Usuário</label>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-3">Entrar</button>
+            <div class="mt-3 text-center">
+                <a href="{{ url_for('register') }}">Não tem uma conta? Registre-se</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
